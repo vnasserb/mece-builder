@@ -74,7 +74,7 @@ def main():
                 st.dataframe(mece, hide_index=True)
                 st.download_button(
                     label="Baixar",
-                    data=mece.astype(int).to_csv().encode("utf-8"),
+                    data=mece.to_csv().encode("utf-8"),
                     file_name="mece.csv",
                     mime="text/csv",
                 )

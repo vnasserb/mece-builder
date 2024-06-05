@@ -14,13 +14,13 @@ def build_mece(df: pd.DataFrame, categories: list, aggregation_functions: dict):
 
             for i in range(0, len(categories) - 1, 1):
                 if agg_function == "sum":
-                    subtotals = pivot_df.groupby(categories[:-1 - i]).sum().reset_index()
+                    subtotals = pivot_df.groupby(categories[:-1 - i])[column].sum().reset_index()
                 elif agg_function == "count":
-                    subtotals = pivot_df.groupby(categories[:-1 - i]).count().reset_index()
+                    subtotals = pivot_df.groupby(categories[:-1 - i]).sum().reset_index()
                 elif agg_function == "min":
-                    subtotals = pivot_df.groupby(categories[:-1 - i]).min().reset_index()
+                    subtotals = pivot_df.groupby(categories[:-1 - i])[column].min().reset_index()
                 elif agg_function == "max":
-                    subtotals = pivot_df.groupby(categories[:-1 - i]).max().reset_index()
+                    subtotals = pivot_df.groupby(categories[:-1 - i])[column].max().reset_index()
                 elif agg_function == "mean":
                     subtotals = pivot_df.groupby(categories[:-1 - i])[column].mean().reset_index()
                 elif agg_function == "median":
