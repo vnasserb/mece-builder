@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import streamlit as st
-
+import math
 
 @st.cache_data
 def build_mece(df: pd.DataFrame, categories: list, aggregation_functions: dict):
@@ -69,3 +69,20 @@ def build_mece(df: pd.DataFrame, categories: list, aggregation_functions: dict):
 def uploaded_file_to_dataframe(uploaded_file):
     dataframe = pd.read_csv(uploaded_file)
     return dataframe
+
+
+def build_abbreviated_df(df: pd.DataFrame, indexes: list):
+    abbreviated_df = df.copy()
+    df_values = abbreviated_df[indexes].values
+    df_columns = abbreviated_df[indexes].columns
+    concatenated_values = [
+        ", ".join([f"{df_columns[c]}: {df_row[c]}" for c in range(len(df_columns))
+                  if not ((isinstance(df_row[c], float) and math.isnan(df_row[c]))
+                          or df_row[c] == '')])
+        for df_row in df_values
+    ]
+    # st.write(concatenated_values)
+    abbreviated_df['Linha'] = concatenated_values
+    abbreviated_df = abbreviated_df[['Linha'] + abbreviated_df.columns[len(indexes):-1].tolist()]
+
+    return abbreviated_df

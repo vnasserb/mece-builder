@@ -3,6 +3,7 @@ import streamlit as st
 from MeceBuilder import *
 from TreeBuilder import plot_tree
 from datetime import datetime
+import math
 
 aggregation_functions = []
 agrregations_dict = {
@@ -35,8 +36,9 @@ def main():
     if file is not None:
         data = uploaded_file_to_dataframe(file)
 
-        indexes = st.multiselect(label="Selecione as colunas que deseja agrupar. As primeiras são consideradas como as mais abrangentes",
-                                 options=data.columns)
+        indexes = st.multiselect(
+            label="Selecione as colunas que deseja agrupar. As primeiras são consideradas como as mais abrangentes",
+            options=data.columns)
 
         st.header("Insira as métricas que deseja visualizar")
         aggregations = []
@@ -87,11 +89,25 @@ def main():
                     mece = build_mece(df=data, categories=indexes, aggregation_functions=aggregation_functions_dict)
 
                     st.write("<br><br>", unsafe_allow_html=True)
+                    st.subheader("Versão do MECE com todas as colunas separadas")
+
                     st.dataframe(mece, hide_index=True)
                     st.download_button(
                         label="Baixar",
                         data=mece.to_csv().encode("utf-8"),
-                        file_name=f"{datetime.utcnow()} mece.csv",
+                        file_name=f"{datetime.utcnow()}_mece_separado.csv",
+                        mime="text/csv",
+                    )
+
+                    st.write("<br><br>", unsafe_allow_html=True)
+                    st.subheader("Versão do MECE com todas as colunas condensadas")
+
+                    abbreviated_mece = build_abbreviated_df(mece, indexes)
+                    st.dataframe(abbreviated_mece, hide_index=True)
+                    st.download_button(
+                        label="Baixar",
+                        data=abbreviated_mece.to_csv().encode("utf-8"),
+                        file_name=f"{datetime.utcnow()}_mece_condensado.csv",
                         mime="text/csv",
                     )
 
@@ -118,13 +134,16 @@ def main():
                     columns = st.columns(3)
 
                     with columns[0]:
-                        node_color = st.selectbox("Cor dos nós", options=["Azul", "Vermelho", "Verde", "Amarelo", "Laranja", "Preto", "Roxo"])
+                        node_color = st.selectbox("Cor dos nós",
+                                                  options=["Azul", "Vermelho", "Verde", "Amarelo", "Laranja", "Preto",
+                                                           "Roxo"])
 
                     with columns[1]:
                         node_font_color = st.selectbox("Cor da fonte", options=["Preto", "Branco"])
 
                     with columns[2]:
-                        nodes_to_exclude = st.multiselect("Nós a serem excluídos", options=np.arange(0, mece.shape[0], 1))
+                        nodes_to_exclude = st.multiselect("Nós a serem excluídos",
+                                                          options=np.arange(0, mece.shape[0], 1))
 
                     columns = st.columns(3)
 
@@ -140,13 +159,16 @@ def main():
                     columns = st.columns(3)
 
                     with columns[0]:
-                        node_font_size = st.slider("Tamanho da fonte do nó", min_value=1, max_value=50, value=10, step=1)
+                        node_font_size = st.slider("Tamanho da fonte do nó", min_value=1, max_value=50, value=10,
+                                                   step=1)
 
                     with columns[1]:
-                        x_offset = st.slider("Translação horizontal da métrica", min_value=-30, max_value=30, value=10, step=1)
+                        x_offset = st.slider("Translação horizontal da métrica", min_value=-30, max_value=30, value=10,
+                                             step=1)
 
                     with columns[2]:
-                        y_offset = st.slider("Translação vertical da métrica", min_value=-30, max_value=30, value=10, step=1)
+                        y_offset = st.slider("Translação vertical da métrica", min_value=-30, max_value=30, value=10,
+                                             step=1)
 
                     with st.columns(7)[3]:
                         submitted = st.form_submit_button("Gerar diagrama")
