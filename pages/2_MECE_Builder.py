@@ -98,6 +98,7 @@ def main():
             with mece_as_tree:
                 st.header("Seu MECE como diagrama")
 
+                st.subheader("Cada MECE é único, então customize seu diagrama da maneira que seja melhor para você")
                 st.subheader("Antes de criar seu diagrama, atente-se")
                 diagram_controls_html = """
                     <ul>

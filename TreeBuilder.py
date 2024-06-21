@@ -39,19 +39,29 @@ def plot_tree(df: pd.DataFrame, categories, node_color='blue', node_font_color='
     nodes_to_exclude_list = [] if not nodes_to_exclude else nodes_to_exclude
 
     qty_leafs = np.count_nonzero([count_non_nulls(value) == len(categories) for value in df_values])
-    leafs_x_coord = [x_offset * x for x in np.arange(-1 * math.floor(qty_leafs / 2), math.floor(qty_leafs / 2) + 1, 1)
-                     if qty_leafs % 2 != 0 or x != 0]
 
     x_count = 0
+    current_position = -1 * math.floor(qty_leafs / 2) - x_offset
+    previous_was_leaf = False
+    leafs_x_coord = []
 
     # Coordenadas para as folhas
     for row in range(len(df_values) - 1, 0, -1):
         row_values = df_values[row]
 
         if count_non_nulls(row_values) == len(categories):
-            coordinates[row] = (leafs_x_coord[x_count], coordinates[row][1])
-            x_count += 1
             checked[row] = True
+            if previous_was_leaf:
+                leaf_position = current_position + len(categories) * x_offset
+            else:
+                leaf_position = current_position + x_offset
+
+            current_position = leaf_position
+            leafs_x_coord.append(leaf_position)
+            coordinates[row] = (leaf_position, coordinates[row][1])
+        else:
+            previous_was_leaf = False
+            current_position += x_offset
 
     edges = []
 
@@ -103,7 +113,8 @@ def plot_tree(df: pd.DataFrame, categories, node_color='blue', node_font_color='
         nodes.append({
             'label': node_label,
             'coordinates': coordinates[row],
-            'annotation': [f"{prettify_name(tree_metrics_names[k])}: {node_metrics[k]}" for k in range(len(tree_metrics_names))],
+            'annotation': [f"{prettify_name(tree_metrics_names[k])}: {node_metrics[k]}" for k in
+                           range(len(tree_metrics_names))],
             'index': row
         })
 
@@ -128,21 +139,24 @@ def plot_tree(df: pd.DataFrame, categories, node_color='blue', node_font_color='
         node = enumeration[1]
         x_pos, y_pos = node['coordinates']
         label = node['label']
+        index = node['index']
         annotations = node['annotation']
 
-        ax.text(x_pos, y_pos, label, ha='center', va='center',
-                bbox=dict(boxstyle="round,pad=0.5", edgecolor='black', facecolor=node_color),
-                color=node_font_color, fontsize=node_font_size)
-        ax.annotate(node['index'], xy=(x_pos - len(label) / 10, y_pos + 2 / node_font_size),
-                    fontsize=annotation_font_size)
+        txt = ax.text(x_pos, y_pos, f"({index}) {label}", ha='center', va='center', wrap=True,
+                      bbox=dict(boxstyle="round,pad=0.5", edgecolor='black', facecolor=node_color),
+                      color=node_font_color, fontsize=node_font_size)
+        txt._get_wrap_line_width = lambda: 400
+        # ax.annotate(node['index'], xy=(x_pos - node_font_size/10, y_pos + 0 / node_font_size),
+        #             fontsize=annotation_font_size)
 
         annotation_count = 0
         for annotation in annotations:
             annotations_offset = (0 if y_pos == -1 * y_offset * len(categories) else x_annotation_offset,
-                                  1 * y_annotation_offset if y_pos == -1 * y_offset * len(categories) else y_annotation_offset)
+                                  1 * y_annotation_offset if y_pos == -1 * y_offset * len(
+                                      categories) else y_annotation_offset)
 
             ax.annotate(annotation, xy=(x_pos + annotations_offset[0],
-                                        y_pos - annotations_offset[1] - .1 * annotation_count),
+                                        y_pos - annotations_offset[1] - .2 * annotation_count),
                         fontsize=annotation_font_size)
             annotation_count += 1
 
@@ -152,7 +166,6 @@ def plot_tree(df: pd.DataFrame, categories, node_color='blue', node_font_color='
         ax.annotate('', xy=(x_dest, y_dest + 0.2), xytext=(x_origin, y_origin - 0.2),
                     arrowprops=dict(arrowstyle="->", color='black'))
 
-    # st.write(nodes)
     ax.set_xlim(min(leafs_x_coord) - 5, max(leafs_x_coord) + 5)
     ax.set_ylim(-2 * tree_height, 1)
     ax.axis('off')
